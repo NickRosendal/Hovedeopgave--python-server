@@ -10,15 +10,15 @@ Copyright (c) 2013 - Kim Lindhard
 """
 import sys
 import usb.core
-
+import threading
     
-class MagtekUsbCardReader:
+class MagtekUsbCardReader(threading.Thread):
     VENDOR_ID = 0x0801
     PRODUCT_ID = 0x0002
     DATA_SIZE = 337
     
-    def startReading(self):
-
+    def run(self):
+        threading.Thread.__init__(self)
         # find the MagTek reader
         self.device = usb.core.find(idVendor=MagtekUsbCardReader.VENDOR_ID, idProduct=MagtekUsbCardReader.PRODUCT_ID)
         if self.device is None:

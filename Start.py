@@ -4,14 +4,15 @@ from MagtekUsbCardReader import MagtekUsbCardReader
 import HealthInsuranceCardInterpreter
 class ObserverbleTest():
     def __init__(self):
-        self.myCommandServer = CommandServer()
-        self.myCommandServer.registerObserver(self)
-        self.myCommandServer.start()
+     #  self.myCommandServer = CommandServer()
+     #   self.myCommandServer.registerObserver(self)
+     #  self.myCommandServer.start()
         
-        self.myMagtekUsbCardReader = MagtekUsbCardReader()
-        self.myMagtekUsbCardReader.registerObserver(self)
-        self.myMagtekUsbCardReader.startReading()
+     #   self.myMagtekUsbCardReader = MagtekUsbCardReader()
+     #   self.myMagtekUsbCardReader.registerObserver(self)
+     #   self.myMagtekUsbCardReader.start()
         
+        print "we made it"
         self.myCameraCaptureServer = CameraCaptureServer()
         self.myCameraCaptureServer.start()
         

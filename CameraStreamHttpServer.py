@@ -92,11 +92,10 @@ class CameraCapture():
       t = threading.Timer(time_wait, self.capture_image)
       t.start()
 
-class HTTPServer(SocketServer.ThreadingMixIn,
-                 BaseHTTPServer.HTTPServer):
-  def __init__(self, server_address, cam_dev, cam_res, cam_fps):
-    SocketServer.TCPServer.__init__(self, server_address, HTTPHandler)
-    self.camera = CameraCapture(cam_dev, cam_res, cam_fps)
+class HTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+    def __init__(self, server_address, cam_dev, cam_res, cam_fps):
+        SocketServer.TCPServer.__init__(self, server_address, HTTPHandler)
+        self.camera = CameraCapture(cam_dev, cam_res, cam_fps)
     
 class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   """
