@@ -12,39 +12,38 @@ import sys
 import usb.core
 
     
-class MagtekUsbReader:
+class MagtekUsbCardReader:
     VENDOR_ID = 0x0801
     PRODUCT_ID = 0x0002
     DATA_SIZE = 337
     
-    def __init__(self):   
+    def startReading(self):
 
         # find the MagTek reader
-        self.device = usb.core.find(idVendor=MagtekUsbReader.VENDOR_ID, idProduct=MagtekUsbReader.PRODUCT_ID)
+        self.device = usb.core.find(idVendor=MagtekUsbCardReader.VENDOR_ID, idProduct=MagtekUsbCardReader.PRODUCT_ID)
         if self.device is None:
-            sys.exit("Could not find MagTek USB HID Swipe Reader.")
-        
+            self.notify("Could not find MagTek USB HID Swipe Reader.")
+            sys.exit();
         # make sure the hiddev kernel driver is not active
         if self.device.is_kernel_driver_active(0):
             try:
                 self.device.detach_kernel_driver(0)
             except usb.core.USBError as e:
-                sys.exit("Could not detatch kernel driver: %s" % str(e))
+                self.notify("Could not detatch kernel driver: %s" % str(e))
         
         # set configuration
         try:
             self.device.set_configuration()
             self.device.reset()
         except usb.core.USBError as e:
-            sys.exit("Could not set configuration: %s" % str(e))
+            self.notify("Could not set configuration: %s" % str(e))
             
         self.endpoint = self.device[0][(0,0)][0]
-        print "MagTek USB HID Swipe Reader is ready"
     
     
-    def startReading(self):
+    
         # wait for swipe
-        print "Please swipe your card..."
+        self.notify("Ready to read card")
         while True:
             swiped = False
             data = []
@@ -52,7 +51,7 @@ class MagtekUsbReader:
                 try:
                     data += self.device.read(self.endpoint.bEndpointAddress, self.endpoint.wMaxPacketSize,  timeout=250)
                     if not swiped: 
-                        print "Reading..."
+                         self.notify("Card swiped")
                     swiped = True
             
                 except usb.core.USBError as e:
@@ -61,14 +60,11 @@ class MagtekUsbReader:
                             break  # we got it!
                         
                         else:
-                            print "Bad swipe, try again. (%d bytes)" % len(data)
-                            print "Data: %s" % ''.join(map(chr, data))
+                            self.notify("Bad read")
                             data = []
                             swiped = False
                             continue
                         
-            print "Done reading"
-
             returnList = []
             for item in data:
                 if chr(item) != "\x00":
@@ -83,9 +79,5 @@ class MagtekUsbReader:
         if observer in self.observers:
             self.observers.remove(observer)
     def notify(self, event):
-        print "notify " , event 
         for eachObserver in self.observers:
             eachObserver.notify(self.SUBJECT_NAME, event)
-
-myMagtekUsbReader = MagtekUsbReader()
-myMagtekUsbReader.startReading()
