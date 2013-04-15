@@ -6,6 +6,7 @@ M'%JANSEN^JESPER WOLFRAM             HEDEPARKEN 7 7 E                  1512750?;
 M'%JOHANSEN^SIGNE                    GRG]RDS ALLE 109                  1903500?;9208100423128617741010146084190180310?
 '''
 import re
+import datetime
 def Interpitate(rawString):
     rawString = rawString.replace("[", "AE")
     rawString = rawString.replace("\\", "OE")
@@ -17,10 +18,9 @@ def Interpitate(rawString):
         returnList = []
         for matchItem in match.groups():
             returnList.append(matchItem.strip())
-        #returnList[1] = re.split(" ", returnList[1])
-        #tempLastName = returnList[0]
         returnList[0] = returnList[1] + " " + returnList[0]
         del returnList[1]
+        returnList[3] = datetime.datetime.strptime(str(returnList[3]), "%d%m%y").date().__str__()
         returnList[4] = "Male" if returnList[4] == "1" else "Female"
         
         return returnList

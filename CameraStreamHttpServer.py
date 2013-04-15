@@ -25,22 +25,22 @@ import SocketServer
       
 class CameraCapture():
   def __init__(self, device, resolution, fps):
-    #Initialize the camera
+    # Initialize the camera
     self.camera = pygame.camera.Camera(device, resolution)
     self.camera.start()
 
-    #Set up a CameraSurface Buffer
+    # Set up a CameraSurface Buffer
     self.camera_surface = pygame.Surface(resolution)
     self.jpeg = ""
     self.jpeg_sema = threading.BoundedSemaphore()
-    self.period = 1/float(fps)
+    self.period = 1 / float(fps)
     self.stop = True
     
-    #Prepare conditions
+    # Prepare conditions
     self.frame_count = 0
     self.frame_available = threading.Condition()
     
-    #Kick it off
+    # Kick it off
     self.start_capture()
 
   def get_image(self):
@@ -58,31 +58,31 @@ class CameraCapture():
       self.capture_image()
       
   def capture_image(self):
-    #Time start
+    # Time start
     time_start = time.time()
     
-    #Capture the image [Blocking until image received]
+    # Capture the image [Blocking until image received]
     self.camera_surface = self.camera.get_image(self.camera_surface)
     
-    #Using a tempfile here because pygame image save gets
-    #filetype from extension.  Limiting module use so no PIL.
+    # Using a tempfile here because pygame image save gets
+    # filetype from extension.  Limiting module use so no PIL.
     temp_jpeg = tempfile.NamedTemporaryFile(suffix='.jpg')
     pygame.image.save(self.camera_surface, temp_jpeg.name)
     
-    #Read back the JPEG from the tempfile and store it to self
+    # Read back the JPEG from the tempfile and store it to self
     temp_jpeg.seek(0)
     self.jpeg_sema.acquire()
     self.jpeg = temp_jpeg.read()
     self.jpeg_sema.release()
     temp_jpeg.close()
     
-    #Increment frame count and mark new frame condition
+    # Increment frame count and mark new frame condition
     self.frame_available.acquire()
     self.frame_count += 1
     self.frame_available.notifyAll()
     self.frame_available.release()
     
-    #If not stopped, prepare for the next capture
+    # If not stopped, prepare for the next capture
     if self.stop == False:
       time_elapsed = time.time() - time_start
       if time_elapsed >= self.period:
@@ -103,77 +103,10 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   HTTP Request Handler
   """
   def do_GET(self): 
-    if self.path == "/":
-      response = """
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-<title>Webcam Streamer</title>
-</head>
-<body onload="get_new_image();">Select a streaming option below :<br>
-<a href="/GetStream">Multipart:
-Preferred for fast connections, supported by most browsers.</a><br>
-<a href="/JSStream">Javascript:
-Backup option, for some mobile browsers (Android) and good for slow
-connections.</a>
-</body>
-</html>
-"""   
-      self.send_response(200)
-      self.send_header("Content-Length", str(len(response)))
-      self.send_header("Cache-Control", "no-store")
-      self.end_headers()
-      self.wfile.write(response)    
-
-    elif self.path[:9] == "/JSStream":
-      #HTML with Javascript streaming for browsers that don't support
-      #multipart jpeg (Android!!!)
-      response = """
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-<title>Webcam Stream (Javascript)</title>
-<script type="text/javascript">
-function get_new_image(){
-  var img = new Image();
-  var d = new Date();
-  img.style.zIndex = 0;
-  img.style.position = "absolute";
-  img.onload = got_new_image;
-  //Generate unique URL to bypass caching on mobile browsers that ignore
-  //cache-control
-  img.src = "/GetImage&n=" + d.getTime(); 
-  var webcam = document.getElementById("images");
-  webcam.insertBefore(img, webcam.firstChild);
-}
-
-function got_new_image() {
-  var d = new Date();
-  this.style.zIndex = d.getTime()
-  //Kill the earlier siblings (previous images)
-  while(this.parentNode.childNodes[1]) {
-    this.parentNode.removeChild(this.parentNode.childNodes[1]);
-  }
-  get_new_image();
-}
-</script>
-</head>
-<body onload="get_new_image();">
-<div id="images"></div>
-</body>
-</html>
-"""   
-      self.send_response(200)
-      self.send_header("Content-Length", str(len(response)))
-      self.send_header("Cache-Control", "no-store")
-      self.end_headers()
-      self.wfile.write(response)    
       
-    elif self.path[:10] == "/GetStream":     
-      #Boundary is an arbitrary string that should not occur in the
-      #data stream, using own website address here
+    if self.path[:10] == "/GetStream":     
+      # Boundary is an arbitrary string that should not occur in the
+      # data stream, using own website address here
       boundary = "www.madox.net" 
       self.send_response(200)
       self.send_header("Access-Control-Allow-Origin", "*")
@@ -201,9 +134,9 @@ function got_new_image() {
       self.send_response(200)
       self.send_header("Content-Length", str(len(response)))
       self.send_header("Content-Type", "image/jpeg")
-      self.send_header("Content-Disposition",
-                       "attachment;filename=\"snapshot.jpg\"")
-      self.send_header("Cache-Control", "no-store")
+      #self.send_header("Content-Disposition",
+      #                 "attachment;filename=\"snapshot.jpg\"")
+      #self.send_header("Cache-Control", "no-store")
       self.end_headers()
       self.wfile.write(response)    
 
@@ -213,6 +146,29 @@ function got_new_image() {
     
   do_HEAD = do_POST = do_GET
 
+class CameraCaptureServer():
+    myCameraCapture = None
+    http_server = None
+    http_server_thread = None
+    def start(self):
+        pygame.init()
+        pygame.camera.init()
+        signal.signal(signal.SIGINT, quit)
+        signal.signal(signal.SIGTERM, quit)
+        self.http_server = HTTPServer(server_address=("", 8080),
+                            cam_dev="/dev/video0",
+                            cam_res=(320, 240),
+                            cam_fps=15)
+        self.http_server_thread = threading.Thread(target=
+                                       self.http_server.serve_forever())
+        self.http_server_thread.setDaemon(True)
+        self.http_server_thread.start()
+    def stop(self):
+        self.http_server.camera.stop_capture()
+        sys.exit(0)
+    def takePicture(self, path):
+        pass
+        
 if __name__ == '__main__':
   print "Started webcam streamer"
 
@@ -230,10 +186,10 @@ if __name__ == '__main__':
                             cam_dev="/dev/video0",
                             cam_res=(320,240),
                             cam_fps=15)"""
-  #Localhost, Port 8080, camres=320x240, fps=6
-  http_server = HTTPServer(server_address=("",8080),
+  # Localhost, Port 8080, camres=320x240, fps=6
+  http_server = HTTPServer(server_address=("", 8080),
                             cam_dev="/dev/video0",
-                            cam_res=(320,240),
+                            cam_res=(320, 240),
                             cam_fps=15)
   
   http_server_thread = threading.Thread(target=
