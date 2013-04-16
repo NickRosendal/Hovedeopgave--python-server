@@ -63,10 +63,10 @@ if __name__ == '__main__':
 
     myObserverbleTest = ObserverbleTest()  # starts the class 
     while True:
-        command = raw_input('Write stop to exit')
+        command = raw_input('Write stop to exit\n')
         if command == "stop":
             myObserverbleTest.myCameraCaptureServer.stopCamera()
-            #myObserverbleTest.myCommandServer.stop()
+            myObserverbleTest.myCommandServer.stop()
             print "stopped"
             break;
         print command

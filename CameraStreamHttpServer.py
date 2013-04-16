@@ -162,11 +162,10 @@ class CameraCaptureServer(threading.Thread):
         
     def stopCamera(self):
         self.http_server.camera.stop_capture()
+        self.http_server.camera.camera.stop()
         #HTTPServer.shutdown(self.http_server)
-        self.http_server.shutdown()
-        self.http_server_thread.__stop()
-        print "all hault in CameraStream"
-        sys.exit(0)
+        #self.http_server.shutdown()
+        
     def showVideo(self):
         self.http_server.doVideo = True
         
