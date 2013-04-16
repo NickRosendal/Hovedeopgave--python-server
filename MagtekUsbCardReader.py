@@ -22,28 +22,28 @@ class MagtekUsbCardReader(threading.Thread):
         # find the MagTek reader
         self.device = usb.core.find(idVendor=MagtekUsbCardReader.VENDOR_ID, idProduct=MagtekUsbCardReader.PRODUCT_ID)
         if self.device is None:
-            self.notify("Could not find MagTek USB HID Swipe Reader.")
+            self.notify("status","Could not find MagTek USB HID Swipe Reader.")
             sys.exit();
         # make sure the hiddev kernel driver is not active
         if self.device.is_kernel_driver_active(0):
             try:
                 self.device.detach_kernel_driver(0)
             except usb.core.USBError as e:
-                self.notify("Could not detatch kernel driver: %s" % str(e))
+                self.notify("status","Could not detatch kernel driver: %s" % str(e))
         
         # set configuration
         try:
             self.device.set_configuration()
             self.device.reset()
         except usb.core.USBError as e:
-            self.notify("Could not set configuration: %s" % str(e))
+            self.notify("status","Could not set configuration: %s" % str(e))
             
         self.endpoint = self.device[0][(0,0)][0]
     
     
     
         # wait for swipe
-        self.notify("Ready to read card")
+        self.notify("status","Ready to read card")
         while True:
             swiped = False
             data = []
@@ -51,7 +51,7 @@ class MagtekUsbCardReader(threading.Thread):
                 try:
                     data += self.device.read(self.endpoint.bEndpointAddress, self.endpoint.wMaxPacketSize,  timeout=250)
                     if not swiped: 
-                         self.notify("Card swiped")
+                         self.notify("status","Card swiped")
                     swiped = True
             
                 except usb.core.USBError as e:
@@ -60,7 +60,7 @@ class MagtekUsbCardReader(threading.Thread):
                             break  # we got it!
                         
                         else:
-                            self.notify("Bad read")
+                            self.notify("status","Bad read")
                             data = []
                             swiped = False
                             continue
@@ -69,7 +69,7 @@ class MagtekUsbCardReader(threading.Thread):
             for item in data:
                 if chr(item) != "\x00":
                     returnList.append(item)
-            self.notify(''.join(map(chr, returnList)))
+            self.notify("swipe",''.join(map(chr, returnList)))
             
     observers = []
     SUBJECT_NAME = "CardReader"
@@ -78,6 +78,6 @@ class MagtekUsbCardReader(threading.Thread):
     def unRegisterObserver(self, observer): 
         if observer in self.observers:
             self.observers.remove(observer)
-    def notify(self, event):
+    def notify(self, eventType, event):
         for eachObserver in self.observers:
-            eachObserver.notify(self.SUBJECT_NAME, event)
+            eachObserver.notify(self.SUBJECT_NAME, eventType, event)
