@@ -11,27 +11,20 @@ class ObserverbleTest():
         self.myMagtekUsbCardReader = MagtekUsbCardReader()
         self.myMagtekUsbCardReader.registerObserver(self)
         self.myMagtekUsbCardReader.start()
-
         
         self.myCameraCaptureServer = CameraCaptureServer()
         self.myCameraCaptureServer.start()
-        print "we made it"
+        print "All modules have been asked to start"
 
     def notify(self, subjectName,eventType, message):
         if eventType =="status":
             print subjectName, "status", message
-        if subjectName == "CommandServer":
+        if subjectName == "CommandServer" and eventType =="message":
             self.handleTcpMessages(message)
            
-        elif subjectName == "CardReader":
-        
-                # TEST DO DELETE # 
-                #self.myCameraCaptureServer.takePicture("")
-            if eventType =="swipe":
-                cardString = HealthInsuranceCardInterpreter.Interpitate(message)
-                #print self.createCommandString(cardString)
-                self.myCommandServer.sendMessage(self.createCommandString(cardString))
-       # print subjectName + " says: " + message
+        elif subjectName == "CardReader" and eventType =="swipe":
+            cardString = HealthInsuranceCardInterpreter.Interpitate(message)
+            self.myCommandServer.sendMessage(self.createCommandString(cardString))
        
     def handleTcpMessages(self, message):
         print "CommandServer have recived message:", message
@@ -45,8 +38,6 @@ class ObserverbleTest():
             self.myCommandServer.sendMessage("image is ready")   
         elif message == "pretendToSwipe":
             self.myCommandServer.sendMessage("guestInfo:name:SIGNE JOHANSEN# birthday:1986-12-23# zipcode:3500# sex:Female# status:welcomed# lastVisit:NA##")
-        elif message == "die":
-            self.myCommandServer.stop()
             
     def createCommandString(self, cardInfo):
         if cardInfo == None:

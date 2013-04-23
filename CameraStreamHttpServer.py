@@ -82,15 +82,14 @@ class CameraCapture():
         self.frame_available.notifyAll()
         self.frame_available.release()
         
-        # If not stopped, prepare for the next capture
-        if self.stop == False:
-            time_elapsed = time.time() - time_start
-            if time_elapsed >= self.period:
-                time_wait = 0
-            else:
-                time_wait = self.period - time_elapsed
-            t = threading.Timer(time_wait, self.capture_image)
-            t.start()
+        # If not stopped, prepare for the next capture        if self.stop == False:
+        time_elapsed = time.time() - time_start
+        if time_elapsed >= self.period:
+            time_wait = 0
+        else:
+            time_wait = self.period - time_elapsed
+        t = threading.Timer(time_wait, self.capture_image)
+        t.start()
 
 class HTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     doVideo = True
