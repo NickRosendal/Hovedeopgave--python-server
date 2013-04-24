@@ -32,8 +32,8 @@ class ObserverbleTest():
         if subjectName == "CommandServer" and eventType =="message":
             self.handleTcpMessages(message)
         elif subjectName == "FileServer" and eventType =="status":
-            print message
-            self.myCommandServer.sendMessage("image is ready")      
+            if message[0:20] == "Ready to serve file:":
+                self.myCommandServer.sendMessage("image is ready")      
         elif subjectName == "CardReader" and eventType =="swipe":
             cardList = HealthInsuranceCardInterpreter.Interpitate(message)
             print cardList
@@ -70,8 +70,8 @@ class ObserverbleTest():
             self.myCommandServer.sendMessage("video server is ready")
         elif message == "take picture":
             filePath = self.myCameraCaptureServer.takePicture("path")
-        #    thread = threading.Thread(target=self.myFileServer.serveFile, args=(str(filePath)))
-        #    thread.start()
+            self.myFileServer.serveFile(filePath)
+            print "good show"
         elif message == "pretendToSwipe":
             self.myCommandServer.sendMessage("guestInfo:name:SIGNE JOHANSEN# birthday:1986-12-23# zipcode:3500# sex:Female# status:welcomed# lastVisit:NA##")
             
