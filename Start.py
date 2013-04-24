@@ -1,7 +1,9 @@
 from CommandServer import CommandServer
 from CameraStreamHttpServer import CameraCaptureServer
 from MagtekUsbCardReader import MagtekUsbCardReader
+from DatabaseHandler import DatabaseHandler
 import HealthInsuranceCardInterpreter
+import ImageToString
 class ObserverbleTest():
     def __init__(self):
         self.myCommandServer = CommandServer()
@@ -14,6 +16,8 @@ class ObserverbleTest():
         
         self.myCameraCaptureServer = CameraCaptureServer()
         self.myCameraCaptureServer.start()
+        
+        self.myDatabaseHandler = DatabaseHandler()
         print "All modules have been asked to start"
 
     def notify(self, subjectName,eventType, message):
@@ -23,8 +27,31 @@ class ObserverbleTest():
             self.handleTcpMessages(message)
            
         elif subjectName == "CardReader" and eventType =="swipe":
-            cardString = HealthInsuranceCardInterpreter.Interpitate(message)
-            self.myCommandServer.sendMessage(self.createCommandString(cardString))
+            cardList = HealthInsuranceCardInterpreter.Interpitate(message)
+            print cardList
+            guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardList[0]), str(cardList[1]), str(cardList[3]))
+            if guestFromDataBase:
+                print guestFromDataBase
+                commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) + " " + str(guestFromDataBase[0][2]) +"#"
+                commandString += " birthday:" + str(guestFromDataBase[0][3]) + "#"
+                commandString += " sex:" + str(guestFromDataBase[0][4]) + "#"
+                commandString += " zipcode:" + str(guestFromDataBase[0][5]) + "#"
+                commandString += " id:" + str(guestFromDataBase[0][0]) + "#"
+                commandString += " Events:"
+                for eventItem in guestFromDataBase[1]:
+                    commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"
+                commandString += "#Image:" + ImageToString.getImage() + "#DocumentationImage"
+                #commandString += "#Image:herERDENSA#DocumentationImage"
+                commandString += "##"
+            else:
+                commandString  = "guestInfo:name:" + str(cardList[0]) + " " + str(cardList[1]) + "#"
+                commandString += " birthday:" + str(cardList[3]) + "#"
+                commandString += " sex:" + str(cardList[4]) + "#"
+                commandString += " zipcode:" + str(cardList[2]) + "#"
+                commandString += " Events:##"
+            
+            #print commandString
+            self.myCommandServer.sendMessage(commandString)
        
     def handleTcpMessages(self, message):
         print "CommandServer have recived message:", message
@@ -42,13 +69,12 @@ class ObserverbleTest():
     def createCommandString(self, cardInfo):
         if cardInfo == None:
             return
-        returnString  = "guestInfo:name:" + str(cardInfo[0]) + "#"
+        returnString  = "guestInfo:name:" + str(cardInfo[0]) + " " + str(cardInfo[1]) + "#"
         returnString += " birthday:" + str(cardInfo[3]) + "#"
-        returnString += " zipcode:" + str(cardInfo[2]) + "#"
         returnString += " sex:" + str(cardInfo[4]) + "#"
-        returnString += " status:" + "welcomed#"
-        returnString += " lastVisit:NA#"
+        returnString += " zipcode:" + str(cardInfo[2]) + "#"
         returnString += "#"
+        print returnString
         return returnString 
 if __name__ == '__main__':
 

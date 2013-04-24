@@ -7,6 +7,7 @@ import sqlite3
 
 class DatabaseHandler:
     def __init__(self, dataBase="guestDB.sqlite"):
+    #    self.openConnection()
         pass
     def openConnection(self, dataBase="guestDB.sqlite"):
         self.myConnection = sqlite3.connect(dataBase)
@@ -23,13 +24,16 @@ class DatabaseHandler:
         self.myCursor.execute(" INSERT INTO Event VALUES (datetime(), " + str(guestId) + ", '"+ event + "');");
         self.myConnection.commit()
     def getSingleGuest(self, firstAndMiddleName, lastName, birthday):
+        self.openConnection()
         self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName = '" + firstAndMiddleName + "' AND LastName = '" + lastName + "' AND Birthday = '" + birthday +"'")
         foundGuests = self.myCursor.fetchall()
         if len(foundGuests) == 0:
+            self.closeConnection()
             return None
         elif len(foundGuests) == 1:
-            self.myCursor.execute("SELECT * FROM Event WHERE Id ='" + str(foundGuests[0][0]) + "'")
+            self.myCursor.execute("SELECT DateTime, Description FROM Event WHERE Id ='" + str(foundGuests[0][0]) + "'")
             foundGuests.append(self.myCursor.fetchall())
+            self.closeConnection()
             return foundGuests
     def searchForGuests(self, firstAndMiddleName, lastName, birthday):
         self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName LIKE '%" + firstAndMiddleName + "%' AND LastName  LIKE '%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
@@ -43,6 +47,6 @@ if __name__ == '__main__':
     #tmpTuple = myDatabaseHandler.getSingleGuest("Anders", "Lindhard", "1982-07-21")
     #print tmpTuple
     #myDatabaseHandler.addEventToGuest(tmpTuple[0][0], "Entered")
-    #for currentItem in  myDatabaseHandler.searchForGuests("i", "", ""):
-    #    print currentItem
+    for currentItem in  myDatabaseHandler.searchForGuests("i", "", ""):
+        print currentItem
     myDatabaseHandler.closeConnection()
