@@ -169,6 +169,7 @@ class CameraCaptureServer(threading.Thread):
         self.http_server.doVideo = True
         
     def takePicture(self, path):
+        pygame.image.save(self.http_server.camera.camera_surface, path)
         self.http_server.doVideo = False
         
 """if __name__ == '__main__':

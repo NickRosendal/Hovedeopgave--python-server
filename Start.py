@@ -3,7 +3,6 @@ from CameraStreamHttpServer import CameraCaptureServer
 from MagtekUsbCardReader import MagtekUsbCardReader
 from DatabaseHandler import DatabaseHandler
 import HealthInsuranceCardInterpreter
-import ImageToString
 class ObserverbleTest():
     def __init__(self):
         self.myCommandServer = CommandServer()
@@ -27,6 +26,7 @@ class ObserverbleTest():
             self.handleTcpMessages(message)
            
         elif subjectName == "CardReader" and eventType =="swipe":
+            self.myCameraCaptureServer.takePicture("path.jpeg")
             cardList = HealthInsuranceCardInterpreter.Interpitate(message)
             print cardList
             guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardList[0]), str(cardList[1]), str(cardList[3]))
@@ -40,7 +40,7 @@ class ObserverbleTest():
                 commandString += " Events:"
                 for eventItem in guestFromDataBase[1]:
                     commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"
-                commandString += "#Image:" + ImageToString.getImage() + "#DocumentationImage"
+                #commandString += "#Image:" + ImageToString.getImage() + "#DocumentationImage"
                 #commandString += "#Image:herERDENSA#DocumentationImage"
                 commandString += "##"
             else:
