@@ -1,8 +1,11 @@
+import threading
+
 from CommandServer import CommandServer
 from CameraStreamHttpServer import CameraCaptureServer
 from MagtekUsbCardReader import MagtekUsbCardReader
 from DatabaseHandler import DatabaseHandler
 import HealthInsuranceCardInterpreter
+from FileServer import FileServer
 class ObserverbleTest():
     def __init__(self):
         self.myCommandServer = CommandServer()
@@ -17,6 +20,10 @@ class ObserverbleTest():
         self.myCameraCaptureServer.start()
         
         self.myDatabaseHandler = DatabaseHandler()
+        
+        self.myFileServer = FileServer()
+        self.myFileServer.registerObserver(self)
+        
         print "All modules have been asked to start"
 
     def notify(self, subjectName,eventType, message):
@@ -24,9 +31,10 @@ class ObserverbleTest():
             print subjectName, "status", message
         if subjectName == "CommandServer" and eventType =="message":
             self.handleTcpMessages(message)
-           
+        elif subjectName == "FileServer" and eventType =="status":
+            print message
+            self.myCommandServer.sendMessage("image is ready")      
         elif subjectName == "CardReader" and eventType =="swipe":
-            self.myCameraCaptureServer.takePicture("path.jpeg")
             cardList = HealthInsuranceCardInterpreter.Interpitate(message)
             print cardList
             guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardList[0]), str(cardList[1]), str(cardList[3]))
@@ -61,8 +69,9 @@ class ObserverbleTest():
             self.myCameraCaptureServer.showVideo()
             self.myCommandServer.sendMessage("video server is ready")
         elif message == "take picture":
-            self.myCameraCaptureServer.takePicture("path")
-            self.myCommandServer.sendMessage("image is ready")   
+            filePath = self.myCameraCaptureServer.takePicture("path")
+        #    thread = threading.Thread(target=self.myFileServer.serveFile, args=(str(filePath)))
+        #    thread.start()
         elif message == "pretendToSwipe":
             self.myCommandServer.sendMessage("guestInfo:name:SIGNE JOHANSEN# birthday:1986-12-23# zipcode:3500# sex:Female# status:welcomed# lastVisit:NA##")
             

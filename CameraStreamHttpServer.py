@@ -13,7 +13,7 @@ http://www.madox.net/
 """
 import pygame
 import pygame.camera
-
+import datetime
 import signal
 import sys
 import tempfile
@@ -169,9 +169,11 @@ class CameraCaptureServer(threading.Thread):
         self.http_server.doVideo = True
         
     def takePicture(self, path):
-        pygame.image.save(self.http_server.camera.camera_surface, path)
+        now = datetime.datetime.now()
+        filePath = path + "/" + str(now.year) + "-" + str(now.month)+ "-" + str(now.day) + "/"+ str(now.hour) + "-" + str(now.minute) + "-" + str(now.microsecond) + ".jpeg"
+        pygame.image.save(self.http_server.camera.camera_surface, filePath)
         self.http_server.doVideo = False
-        
+        return filePath
 """if __name__ == '__main__':
   print "Started webcam streamer"
 
