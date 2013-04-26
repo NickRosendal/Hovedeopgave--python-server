@@ -22,7 +22,8 @@ class FileServer(threading.Thread):
                 self.mySocket.bind((self.adress, self.port))
                 self.mySocket.listen(1)
                 f = open(self.file, "rb")
-                data = f.read()
+                data = self.file + "#"
+                data += f.read()
                 f.close()
                 self.notify("status", "Ready to serve file:" +self.file)
                 self.myConnection, maddr = self.mySocket.accept()
@@ -49,4 +50,4 @@ class FileServer(threading.Thread):
         
 if __name__ == '__main__':
     myCommandServer = FileServer()
-    myCommandServer.serveFile("testImage.jpeg")
+    myCommandServer.serveFile("/home/xxx/Eclipse Workspace/PyBarEntrySystemServer/testImage.jpeg")
