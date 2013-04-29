@@ -45,35 +45,31 @@ class MainServer():
         elif message == "start video server":
             self.myCameraCaptureServer.showVideo()
             self.myCommandServer.sendMessage("video server is ready")
-        elif message == "take picture":
+            
+        elif message[0:17] == "take picture for ":
             filePath = self.myCameraCaptureServer.takePicture("Images")
-            # tell the db about the file and maybe delete a old file
-            #self.myFileServer.serveFile(filePath)
+            self.myDatabaseHandler.addImageToGuest(message[17:], filePath)
+            self.myFileServer.serveFile(filePath)
             print "good show"
         elif message[0:23] == "send picture from disk:":
             self.myFileServer.serveFile(MainServer.FILEPATH + message[23:len(message) - 1])
    
     
-    def handleSwipe(self, cardList):
-        guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardList[0]), str(cardList[1]), str(cardList[3]))
-        if guestFromDataBase:
-            print guestFromDataBase
-            commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) + " " + str(guestFromDataBase[0][2]) +"#"
-            commandString += " birthday:" + str(guestFromDataBase[0][3]) + "#"
-            commandString += " sex:" + str(guestFromDataBase[0][4]) + "#"
-            commandString += " zipcode:" + str(guestFromDataBase[0][5]) + "#"
-            commandString += " id:" + str(guestFromDataBase[0][0]) + "#"
-            commandString += "Image:" + str(guestFromDataBase[0][6]) + "#DocumentationImage:" + str(guestFromDataBase[0][6]) + "#"
-            commandString += " Events:"
-            for eventItem in guestFromDataBase[1]:
-                commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"
-            commandString += "##"
-        else:
-            commandString  = "guestInfo:name:" + str(cardList[0]) + " " + str(cardList[1]) + "#"
-            commandString += " birthday:" + str(cardList[3]) + "#"
-            commandString += " sex:" + str(cardList[4]) + "#"
-            commandString += " zipcode:" + str(cardList[2]) + "#"
-            commandString += " Events:##"
+    def handleSwipe(self, cardInfo):
+        guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[3]))
+        if not guestFromDataBase:
+            self.myDatabaseHandler.addGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[3]), str(cardInfo[4]),  str(cardInfo[2]))
+            guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[3]))
+        commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) + " " + str(guestFromDataBase[0][2]) +"#"
+        commandString += " birthday:" + str(guestFromDataBase[0][3]) + "#"
+        commandString += " sex:" + str(guestFromDataBase[0][4]) + "#"
+        commandString += " zipcode:" + str(guestFromDataBase[0][5]) + "#"
+        commandString += " guestId:" + str(guestFromDataBase[0][0]) + "#"
+        commandString += "Image:" + str(guestFromDataBase[0][6]) + "#DocumentationImage:" + str(guestFromDataBase[0][6]) + "#"
+        commandString += " Events:"
+        for eventItem in guestFromDataBase[1]:
+            commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"
+        commandString += "##"
         
         print commandString
         self.myCommandServer.sendMessage(commandString)
@@ -89,7 +85,6 @@ class MainServer():
         print returnString
         return returnString 
 if __name__ == '__main__':
-
     myMainServer = MainServer()  # starts the class 
     while True:
         command = raw_input('Write stop to exit\n')

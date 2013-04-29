@@ -4,7 +4,7 @@ Created on Apr 19, 2013
 @author: xxx
 '''
 import sqlite3
-
+import os
 class DatabaseHandler:
     def __init__(self, dataBase="guestDB.sqlite"):
     #    self.openConnection()
@@ -15,21 +15,26 @@ class DatabaseHandler:
     def closeConnection(self):
         self.myCursor.close()
         self.myConnection.close()
-    def addGuest(self,firstAndMiddleName,lastName,birthday,sex,imagePath,documentationImagePath):
-        if documentationImagePath == None: documentationImagePath = "NULL"
-        self.myCursor.execute("INSERT INTO Guest VALUES (NULL,'" + firstAndMiddleName + "','" + lastName +"','" +birthday +"','"+ sex +"','"+imagePath+ "', "+ documentationImagePath +");"),
-        self.myCursor.execute(" INSERT INTO Event VALUES (datetime(), last_insert_rowid(), 'Guest Created');");
+        pass
+    def addGuest(self,firstAndMiddleName,lastName,birthday,sex,zipCode):
+        self.openConnection()
+        self.myCursor.execute("INSERT INTO Guest VALUES (NULL,'" + firstAndMiddleName + "','" + lastName +"','" +birthday +"','"+ sex +"','"+ zipCode + "',NULL, NULL);"),
+        self.myCursor.execute("INSERT INTO Event VALUES (datetime(), last_insert_rowid(), 'Guest Created');");
         self.myConnection.commit()
+        self.myConnection.close()
     def addEventToGuest(self, guestId, event):
-        self.myCursor.execute(" INSERT INTO Event VALUES (datetime(), " + str(guestId) + ", '"+ event + "');");
+        self.myCursor.execute("INSERT INTO Event VALUES (datetime(), " + str(guestId) + ", '"+ event + "');");
         self.myConnection.commit()
     def addImageToGuest(self,guestId,ImagePath):
-        self.myCursor.execute("SELECT ImagePath FROM Guest WHERE id='" +guestId + "'")
+        self.openConnection()
+        self.myCursor.execute("SELECT ImagePath FROM Guest WHERE id='" +str(guestId) + "'")
         result = self.myCursor.fetchall()
-        
-        if result != None:
-            pass # DO STUFF HERE!
-        
+        print result
+        if result[0][0] != None:
+            os.remove(str(result[0][0]))
+        self.myCursor.execute("UPDATE Guest SET ImagePath='" + ImagePath + "' WHERE ID='" + guestId +"'")
+        self.myConnection.commit()
+        self.closeConnection()
     def getSingleGuest(self, firstAndMiddleName, lastName, birthday):
         self.openConnection()
         self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName = '" + firstAndMiddleName + "' AND LastName = '" + lastName + "' AND Birthday = '" + birthday +"'")
@@ -42,6 +47,7 @@ class DatabaseHandler:
             foundGuests.append(self.myCursor.fetchall())
             self.closeConnection()
             return foundGuests
+        self.closeConnection()
     def searchForGuests(self, firstAndMiddleName, lastName, birthday):
         self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName LIKE '%" + firstAndMiddleName + "%' AND LastName  LIKE '%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
         return self.myCursor.fetchall()
