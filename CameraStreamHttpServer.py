@@ -19,7 +19,7 @@ import sys
 import tempfile
 import threading
 import time
-
+import os
 import BaseHTTPServer
 import SocketServer
       
@@ -170,11 +170,15 @@ class CameraCaptureServer(threading.Thread):
         
     def takePicture(self, path):
         now = datetime.datetime.now()
-        filePath = path + "/" + str(now.year) + "-" + str(now.month)+ "-" + str(now.day) + "/"+ str(now.hour) + "-" + str(now.minute) + "-" + str(now.microsecond) + ".jpeg"
+        filePath = path + "/" + str(now.year) + "/" + str(now.month)+ "/" + str(now.day) + "/"+ str(now.hour) + "-" + str(now.minute) + "-" + str(now.microsecond) + ".jpeg"
+        if not os.path.exists(filePath[0:filePath.rfind("/")]):
+            os.makedirs(filePath[0:filePath.rfind("/")])
         pygame.image.save(self.http_server.camera.camera_surface, filePath)
         self.http_server.doVideo = False
         return filePath
-"""if __name__ == '__main__':
+if __name__ == '__main__':
+
+    """
   print "Started webcam streamer"
 
   def quit(signum, frame):

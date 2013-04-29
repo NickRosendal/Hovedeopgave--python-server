@@ -6,7 +6,8 @@ from MagtekUsbCardReader import MagtekUsbCardReader
 from DatabaseHandler import DatabaseHandler
 import HealthInsuranceCardInterpreter
 from FileServer import FileServer
-class ObserverbleTest():
+class MainServer():
+    FILEPATH = "/home/xxx/Eclipse Workspace/PyBarEntrySystemServer/GuestImages/"
     def __init__(self):
         self.myCommandServer = CommandServer()
         self.myCommandServer.registerObserver(self)
@@ -33,33 +34,9 @@ class ObserverbleTest():
             self.handleTcpMessages(message)
         elif subjectName == "FileServer" and eventType =="status":
             if message[0:20] == "Ready to serve file:":
-                self.myCommandServer.sendMessage("image is ready")      
+                self.myCommandServer.sendMessage("Image from disk is ready:" + message[20:])      
         elif subjectName == "CardReader" and eventType =="swipe":
-            cardList = HealthInsuranceCardInterpreter.Interpitate(message)
-            print cardList
-            guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardList[0]), str(cardList[1]), str(cardList[3]))
-            if guestFromDataBase:
-                print guestFromDataBase
-                commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) + " " + str(guestFromDataBase[0][2]) +"#"
-                commandString += " birthday:" + str(guestFromDataBase[0][3]) + "#"
-                commandString += " sex:" + str(guestFromDataBase[0][4]) + "#"
-                commandString += " zipcode:" + str(guestFromDataBase[0][5]) + "#"
-                commandString += " id:" + str(guestFromDataBase[0][0]) + "#"
-                commandString += " Events:"
-                for eventItem in guestFromDataBase[1]:
-                    commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"
-                #commandString += "#Image:" + ImageToString.getImage() + "#DocumentationImage"
-                #commandString += "#Image:herERDENSA#DocumentationImage"
-                commandString += "##"
-            else:
-                commandString  = "guestInfo:name:" + str(cardList[0]) + " " + str(cardList[1]) + "#"
-                commandString += " birthday:" + str(cardList[3]) + "#"
-                commandString += " sex:" + str(cardList[4]) + "#"
-                commandString += " zipcode:" + str(cardList[2]) + "#"
-                commandString += " Events:##"
-            
-            #print commandString
-            self.myCommandServer.sendMessage(commandString)
+            self.handleSwipe(HealthInsuranceCardInterpreter.Interpitate(message))
        
     def handleTcpMessages(self, message):
         print "CommandServer have recived message:", message
@@ -69,11 +46,37 @@ class ObserverbleTest():
             self.myCameraCaptureServer.showVideo()
             self.myCommandServer.sendMessage("video server is ready")
         elif message == "take picture":
-            filePath = self.myCameraCaptureServer.takePicture("path")
-            self.myFileServer.serveFile(filePath)
+            filePath = self.myCameraCaptureServer.takePicture("Images")
+            # tell the db about the file and maybe delete a old file
+            #self.myFileServer.serveFile(filePath)
             print "good show"
-        elif message == "pretendToSwipe":
-            self.myCommandServer.sendMessage("guestInfo:name:SIGNE JOHANSEN# birthday:1986-12-23# zipcode:3500# sex:Female# status:welcomed# lastVisit:NA##")
+        elif message[0:23] == "send picture from disk:":
+            self.myFileServer.serveFile(MainServer.FILEPATH + message[23:len(message) - 1])
+   
+    
+    def handleSwipe(self, cardList):
+        guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardList[0]), str(cardList[1]), str(cardList[3]))
+        if guestFromDataBase:
+            print guestFromDataBase
+            commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) + " " + str(guestFromDataBase[0][2]) +"#"
+            commandString += " birthday:" + str(guestFromDataBase[0][3]) + "#"
+            commandString += " sex:" + str(guestFromDataBase[0][4]) + "#"
+            commandString += " zipcode:" + str(guestFromDataBase[0][5]) + "#"
+            commandString += " id:" + str(guestFromDataBase[0][0]) + "#"
+            commandString += "Image:" + str(guestFromDataBase[0][6]) + "#DocumentationImage:" + str(guestFromDataBase[0][6]) + "#"
+            commandString += " Events:"
+            for eventItem in guestFromDataBase[1]:
+                commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"
+            commandString += "##"
+        else:
+            commandString  = "guestInfo:name:" + str(cardList[0]) + " " + str(cardList[1]) + "#"
+            commandString += " birthday:" + str(cardList[3]) + "#"
+            commandString += " sex:" + str(cardList[4]) + "#"
+            commandString += " zipcode:" + str(cardList[2]) + "#"
+            commandString += " Events:##"
+        
+        print commandString
+        self.myCommandServer.sendMessage(commandString)
             
     def createCommandString(self, cardInfo):
         if cardInfo == None:
@@ -87,12 +90,13 @@ class ObserverbleTest():
         return returnString 
 if __name__ == '__main__':
 
-    myObserverbleTest = ObserverbleTest()  # starts the class 
+    myMainServer = MainServer()  # starts the class 
     while True:
         command = raw_input('Write stop to exit\n')
         if command == "stop":
-            myObserverbleTest.myCameraCaptureServer.stopCamera()
-            myObserverbleTest.myCommandServer.stop()
+            myMainServer.myCameraCaptureServer.stopCamera()
+            myMainServer.myCommandServer.stop()
+            myMainServer.myFileServer.stop()
             print "stopped"
             break;
         print command

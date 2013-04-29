@@ -23,6 +23,13 @@ class DatabaseHandler:
     def addEventToGuest(self, guestId, event):
         self.myCursor.execute(" INSERT INTO Event VALUES (datetime(), " + str(guestId) + ", '"+ event + "');");
         self.myConnection.commit()
+    def addImageToGuest(self,guestId,ImagePath):
+        self.myCursor.execute("SELECT ImagePath FROM Guest WHERE id='" +guestId + "'")
+        result = self.myCursor.fetchall()
+        
+        if result != None:
+            pass # DO STUFF HERE!
+        
     def getSingleGuest(self, firstAndMiddleName, lastName, birthday):
         self.openConnection()
         self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName = '" + firstAndMiddleName + "' AND LastName = '" + lastName + "' AND Birthday = '" + birthday +"'")
