@@ -8,12 +8,13 @@ class FileServer(threading.Thread):
         self.port = port
         self.file = None
         self.fileQue = []
-        self.stayOpen = True
+        self.shouldRun = True
+        self.stayOpen = False
         self.start()
          
     def serveFile(self, file):
         self.fileQue.append(file)
-        
+        self.stayOpen = True
     def closeConnection(self):
         self.stayOpen = False
     def stop(self):

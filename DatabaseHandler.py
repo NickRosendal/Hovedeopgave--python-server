@@ -23,13 +23,14 @@ class DatabaseHandler:
         self.myConnection.commit()
         self.myConnection.close()
     def addEventToGuest(self, guestId, event):
+        self.openConnection()
         self.myCursor.execute("INSERT INTO Event VALUES (datetime(), " + str(guestId) + ", '"+ event + "');");
         self.myConnection.commit()
+        self.myConnection.close()
     def addImageToGuest(self,guestId,ImagePath):
         self.openConnection()
         self.myCursor.execute("SELECT ImagePath FROM Guest WHERE id='" +str(guestId) + "'")
         result = self.myCursor.fetchall()
-        print result
         if result[0][0] != None:
             os.remove(str(result[0][0]))
         self.myCursor.execute("UPDATE Guest SET ImagePath='" + ImagePath + "' WHERE ID='" + guestId +"'")
@@ -43,7 +44,7 @@ class DatabaseHandler:
             self.closeConnection()
             return None
         elif len(foundGuests) == 1:
-            self.myCursor.execute("SELECT DateTime, Description FROM Event WHERE Id ='" + str(foundGuests[0][0]) + "'")
+            self.myCursor.execute("SELECT DateTime, Description FROM Event WHERE Id ='" + str(foundGuests[0][0]) + "' ORDER BY DateTime DESC") #New code
             foundGuests.append(self.myCursor.fetchall())
             self.closeConnection()
             return foundGuests
@@ -51,15 +52,31 @@ class DatabaseHandler:
     def searchForGuests(self, firstAndMiddleName, lastName, birthday):
         self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName LIKE '%" + firstAndMiddleName + "%' AND LastName  LIKE '%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
         return self.myCursor.fetchall()
+    def deleteGuest(self, firstAndMiddleName, lastName, birthday):
+        self.openConnection()
+        self.myCursor.execute("SELECT Id, ImagePath, DocumentationImagePath FROM Guest WHERE FirstAndMiddleName LIKE '%" + firstAndMiddleName + "%' AND LastName  LIKE '%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
+        for currentItem in self.myCursor.fetchall():
+            try:
+                if currentItem[1] != None:
+                    os.remove(str(currentItem[1]))
+                if currentItem[2] != None:
+                    os.remove(str(currentItem[2]))
+            except OSError as e:
+                print('File error' + str(e))
+            self.myCursor.execute("DELETE FROM Event WHERE Id = '" + str(currentItem[0]) + "'")
+            self.myCursor.execute("DELETE FROM Guest WHERE Id = '" + str(currentItem[0]) + "'")
+        self.myConnection.commit()
+        self.closeConnection()
         
 if __name__ == '__main__':
     myDatabaseHandler = DatabaseHandler()
-    myDatabaseHandler.openConnection()
+    #myDatabaseHandler.openConnection()
     #myDatabaseHandler.addGuest("firstAndMiddleName", "lastName", "birthday", "F", "imagePath", None)
     #myDatabaseHandler.getSingleGuest("And1ers", "Lindhard")
     #tmpTuple = myDatabaseHandler.getSingleGuest("Anders", "Lindhard", "1982-07-21")
     #print tmpTuple
     #myDatabaseHandler.addEventToGuest(tmpTuple[0][0], "Entered")
-    for currentItem in  myDatabaseHandler.searchForGuests("i", "", ""):
-        print currentItem
-    myDatabaseHandler.closeConnection()
+    #for currentItem in  myDatabaseHandler.searchForGuests("i", "", ""):
+    #    print currentItem
+    #myDatabaseHandler.deleteGuest("kim","","")
+    #myDatabaseHandler.closeConnection()
