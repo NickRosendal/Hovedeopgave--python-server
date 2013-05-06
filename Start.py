@@ -5,6 +5,7 @@ from CameraStreamHttpServer import CameraCaptureServer
 from MagtekUsbCardReader import MagtekUsbCardReader
 from DatabaseHandler import DatabaseHandler
 import HealthInsuranceCardInterpreter
+import re
 from FileServer import FileServer
 class MainServer():
    # FILEPATH = "/home/xxx/Eclipse Workspace/PyBarEntrySystemServer/"
@@ -56,7 +57,11 @@ class MainServer():
             self.myDatabaseHandler.addImageToGuest(message[17:], filePath)
             self.myFileServer.serveFile(filePath)
             print "good show"
-        
+        elif message[0:7] == "Search:":
+            name = re.match(r".*?Name:(.*?)#", message[7:]).group(1)
+            sex = re.match(r".*?Sex:(.*?)#", message[7:]).group(1)
+            
+    
         elif message[0:23] == "send picture from disk:":
             self.myFileServer.serveFile(MainServer.FILEPATH + message[23:len(message) - 1])
         elif message[0:8] == "Entered ":
