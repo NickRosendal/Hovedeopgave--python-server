@@ -8,8 +8,6 @@ import HealthInsuranceCardInterpreter
 import re
 from FileServer import FileServer
 class MainServer():
-   # FILEPATH = "/home/xxx/Eclipse Workspace/PyBarEntrySystemServer/"
-    FILEPATH =""
     def __init__(self):
         self.myCommandServer = CommandServer()
         self.myCommandServer.registerObserver(self)
@@ -56,7 +54,6 @@ class MainServer():
             filePath = self.myCameraCaptureServer.takePicture("Images")
             self.myDatabaseHandler.addImageToGuest(message[17:], filePath)
             self.myFileServer.serveFile(filePath)
-            print "good show"
         elif message[0:7] == "Search:":
             name = re.match(r".*?Name:(.*?)#", message[7:]).group(1)
             sex = re.match(r".*?Sex:(.*?)#", message[7:]).group(1)
@@ -67,16 +64,15 @@ class MainServer():
         elif message[0:8] == "Entered ":
             self.myDatabaseHandler.addEventToGuest(message[8:], "Entered")
     def handleSwipe(self, cardInfo):
-        guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[3]))
+        guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]))
         if not guestFromDataBase:
-            self.myDatabaseHandler.addGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[3]), str(cardInfo[4]),  str(cardInfo[2]))
-            guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[3]))
-        commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) + " " + str(guestFromDataBase[0][2]) +"#"
-        commandString += " birthday:" + str(guestFromDataBase[0][3]) + "#"
-        commandString += " sex:" + str(guestFromDataBase[0][4]) + "#"
-        commandString += " zipcode:" + str(guestFromDataBase[0][5]) + "#"
+            self.myDatabaseHandler.addGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[2]))
+            guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[2]))
+        commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) +"#"
+        commandString += " birthday:" + str(guestFromDataBase[0][2]) + "#"
+        commandString += " sex:" + str(guestFromDataBase[0][3]) + "#"
         commandString += " guestId:" + str(guestFromDataBase[0][0]) + "#"
-        commandString += " Image:" + str(guestFromDataBase[0][6]) + "# DocumentationImage:" + str(guestFromDataBase[0][6]) + "#"
+        commandString += " Image:" + str(guestFromDataBase[0][4]) + "# DocumentationImage:" + str(guestFromDataBase[0][5]) + "#"
         commandString += " Events:"
         for eventItem in guestFromDataBase[1]:
             commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"

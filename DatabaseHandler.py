@@ -16,9 +16,9 @@ class DatabaseHandler:
         self.myCursor.close()
         self.myConnection.close()
         pass
-    def addGuest(self,firstAndMiddleName,lastName,birthday,sex,zipCode):
+    def addGuest(self,name,birthday,sex):
         self.openConnection()
-        self.myCursor.execute("INSERT INTO Guest VALUES (NULL,'" + firstAndMiddleName + "','" + lastName +"','" +birthday +"','"+ sex +"','"+ zipCode + "',NULL, NULL);"),
+        self.myCursor.execute("INSERT INTO Guest VALUES (NULL,'" + name + "','" + birthday +"','"+ sex +"',NULL, NULL);"),
         self.myCursor.execute("INSERT INTO Event VALUES (datetime(), last_insert_rowid(), 'Guest Created');");
         self.myConnection.commit()
         self.myConnection.close()
@@ -36,9 +36,9 @@ class DatabaseHandler:
         self.myCursor.execute("UPDATE Guest SET ImagePath='" + ImagePath + "' WHERE ID='" + guestId +"'")
         self.myConnection.commit()
         self.closeConnection()
-    def getSingleGuest(self, firstAndMiddleName, lastName, birthday):
+    def getSingleGuest(self, name, birthday):
         self.openConnection()
-        self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName = '" + firstAndMiddleName + "' AND LastName = '" + lastName + "' AND Birthday = '" + birthday +"'")
+        self.myCursor.execute("SELECT * FROM Guest WHERE Name = '" + name + "' AND Birthday = '" + birthday +"'")
         foundGuests = self.myCursor.fetchall()
         if len(foundGuests) == 0:
             self.closeConnection()
@@ -50,11 +50,11 @@ class DatabaseHandler:
             return foundGuests
         self.closeConnection()
     def searchForGuests(self, firstAndMiddleName, lastName, birthday):
-        self.myCursor.execute("SELECT * FROM Guest WHERE FirstAndMiddleName LIKE '%" + firstAndMiddleName + "%' AND LastName  LIKE '%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
+        self.myCursor.execute("SELECT * FROM Guest Name LIKE '%" + firstAndMiddleName + "%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
         return self.myCursor.fetchall()
     def deleteGuest(self, firstAndMiddleName, lastName, birthday):
         self.openConnection()
-        self.myCursor.execute("SELECT Id, ImagePath, DocumentationImagePath FROM Guest WHERE FirstAndMiddleName LIKE '%" + firstAndMiddleName + "%' AND LastName  LIKE '%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
+        self.myCursor.execute("SELECT Id, ImagePath, DocumentationImagePath FROM Guest WHERE Name LIKE '%" + firstAndMiddleName + "%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
         for currentItem in self.myCursor.fetchall():
             try:
                 if currentItem[1] != None:

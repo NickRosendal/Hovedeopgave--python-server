@@ -18,13 +18,13 @@ def Interpitate(rawString):
         returnList = []
         for matchItem in match.groups():
             returnList.append(matchItem.strip())
-        tempLastName = returnList[0]
-        returnList[0] = returnList[1]
-        returnList[1] = tempLastName
-        #returnList[0] = returnList[1] + " " + returnList[0]
-        del returnList[2]
-        returnList[3] = datetime.datetime.strptime(str(returnList[3]), "%d%m%y").date().__str__()
-        returnList[4] = "M" if returnList[4] == "1" else "F"
+        returnList[0] = returnList[1] + " " + returnList[0]
+        del returnList[1]
+        del returnList[1]
+        del returnList[1]
+        print returnList
+        returnList[1] = datetime.datetime.strptime(str(returnList[1]), "%d%m%y").date().__str__()
+        returnList[2] = "M" if returnList[2] == "1" else "F"
         return returnList
     else:
         return None
