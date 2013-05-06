@@ -13,6 +13,8 @@ class FileServer(threading.Thread):
         self.start()
          
     def serveFile(self, file):
+        if file == "None":
+            return
         self.fileQue.append(file)
         self.stayOpen = True
     def closeConnection(self):
@@ -30,16 +32,19 @@ class FileServer(threading.Thread):
                     self.mySocket.bind((self.adress, self.port))
                     self.mySocket.listen(1)
                     filePath =  self.fileQue.pop()
-                    rawFile = open(filePath, "rb")
-                    data = filePath + "#"
-                    data += rawFile.read()
-                    rawFile.close()
-                    self.notify("status", "Ready to serve file:" + filePath)
-                    self.myConnection, maddr = self.mySocket.accept()
-                    self.mySocket.close()
-                    self.myConnection.send(data)
-                    self.myConnection.close()
-                    self.notify("status", "File sent:" + filePath)
+                    try:
+                        rawFile = open(filePath, "rb")
+                        data = filePath + "#"
+                        data += rawFile.read()
+                        rawFile.close()
+                        self.notify("status", "Ready to serve file:" + filePath)
+                        self.myConnection, maddr = self.mySocket.accept()
+                        self.mySocket.close()
+                        self.myConnection.send(data)
+                        self.myConnection.close()
+                        self.notify("status", "File sent:" + filePath)
+                    except IOError:
+                        self.notify("status", "File does not exist:" + filePath)
     observers = []
     SUBJECT_NAME = "FileServer"
     def registerObserver(self, observer):

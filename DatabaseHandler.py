@@ -44,14 +44,29 @@ class DatabaseHandler:
             self.closeConnection()
             return None
         elif len(foundGuests) == 1:
-            self.myCursor.execute("SELECT DateTime, Description FROM Event WHERE Id ='" + str(foundGuests[0][0]) + "' ORDER BY DateTime DESC") #New code
-            foundGuests.append(self.myCursor.fetchall())
+            returnEntry = list(foundGuests[0])
+            self.myCursor.execute("SELECT DateTime, Description FROM Event WHERE Id ='" + str(returnEntry[0]) + "' ORDER BY DateTime DESC") #New code
+            returnEntry.append(self.myCursor.fetchall())
             self.closeConnection()
-            return foundGuests
+            return returnEntry
         self.closeConnection()
-    def searchForGuests(self, firstAndMiddleName, lastName, birthday):
-        self.myCursor.execute("SELECT * FROM Guest Name LIKE '%" + firstAndMiddleName + "%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
-        return self.myCursor.fetchall()
+    def searchForGuests(self, name, sex):
+        self.openConnection()
+        name = name.replace(" ", "%")
+        self.myCursor.execute("SELECT * FROM Guest WHERE Name LIKE '%" + name + "%' AND Sex  LIKE '%" + sex + "%'")
+        foundGuests =  self.myCursor.fetchall()
+        if len(foundGuests) == 0:
+            self.closeConnection()
+            return None
+        else:
+            returnList = []
+            for guestEntry in foundGuests:
+                self.myCursor.execute("SELECT DateTime, Description FROM Event WHERE Id ='" + str(guestEntry[0]) + "' ORDER BY DateTime DESC") #New code
+                returnEntry = list(guestEntry)
+                returnEntry.append(self.myCursor.fetchall())
+                returnList.append(returnEntry)
+            self.closeConnection()
+            return returnList
     def deleteGuest(self, firstAndMiddleName, lastName, birthday):
         self.openConnection()
         self.myCursor.execute("SELECT Id, ImagePath, DocumentationImagePath FROM Guest WHERE Name LIKE '%" + firstAndMiddleName + "%" + lastName + "%' AND Birthday  LIKE '%" + birthday + "%'")
@@ -72,7 +87,7 @@ if __name__ == '__main__':
     myDatabaseHandler = DatabaseHandler()
     #myDatabaseHandler.openConnection()
     #myDatabaseHandler.addGuest("firstAndMiddleName", "lastName", "birthday", "F", "imagePath", None)
-    #myDatabaseHandler.getSingleGuest("And1ers", "Lindhard")
+    print "getSingleGuest", myDatabaseHandler.getSingleGuest("KIM GRAVE LINDHARD", "1982-07-21")
     #tmpTuple = myDatabaseHandler.getSingleGuest("Anders", "Lindhard", "1982-07-21")
     #print tmpTuple
     #myDatabaseHandler.addEventToGuest(tmpTuple[0][0], "Entered")
@@ -80,3 +95,4 @@ if __name__ == '__main__':
     #    print currentItem
     #myDatabaseHandler.deleteGuest("kim","","")
     #myDatabaseHandler.closeConnection()
+    print "searchForGuests", myDatabaseHandler.searchForGuests("kim", "M")

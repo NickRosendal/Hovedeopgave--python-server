@@ -31,7 +31,6 @@ class MainServer():
         if eventType =="status":
             print subjectName, "status", message
         if subjectName == "CommandServer" and eventType =="status" and message == "Closing connection":
-            pass
             self.myFileServer.closeConnection()
         if subjectName == "CommandServer" and eventType =="message":
             self.handleTcpMessages(message)
@@ -54,46 +53,49 @@ class MainServer():
             filePath = self.myCameraCaptureServer.takePicture("Images")
             self.myDatabaseHandler.addImageToGuest(message[17:], filePath)
             self.myFileServer.serveFile(filePath)
-        elif message[0:7] == "Search:":
-            name = re.match(r".*?Name:(.*?)#", message[7:]).group(1)
-            sex = re.match(r".*?Sex:(.*?)#", message[7:]).group(1)
-            
+        elif message[0:7] == "search:":
+            name = re.search(r"name:(.*?)#", message[7:]).group(1)
+            sex = re.search(r"sex:(.*?)#", message[7:]).group(1)
+            searchResult = self.myDatabaseHandler.searchForGuests(name, sex)
+            commandString = "searchResult:"
+            if searchResult:
+                for guestEntry in searchResult:
+                    print guestEntry
+                    commandString += self.createGuestInfoCommandString(guestEntry)
+            commandString += "#"
+            print commandString
+            self.myCommandServer.sendMessage(commandString)
     
         elif message[0:23] == "send picture from disk:":
-            self.myFileServer.serveFile(MainServer.FILEPATH + message[23:len(message) - 1])
+            self.myFileServer.serveFile(message[23:len(message) - 1])
         elif message[0:8] == "Entered ":
             self.myDatabaseHandler.addEventToGuest(message[8:], "Entered")
     def handleSwipe(self, cardInfo):
         guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]))
         if not guestFromDataBase:
             self.myDatabaseHandler.addGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[2]))
-            guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[2]))
-        commandString  = "guestInfo:name:" + str(guestFromDataBase[0][1]) +"#"
-        commandString += " birthday:" + str(guestFromDataBase[0][2]) + "#"
-        commandString += " sex:" + str(guestFromDataBase[0][3]) + "#"
-        commandString += " guestId:" + str(guestFromDataBase[0][0]) + "#"
-        commandString += " Image:" + str(guestFromDataBase[0][4]) + "# DocumentationImage:" + str(guestFromDataBase[0][5]) + "#"
-        commandString += " Events:"
-        for eventItem in guestFromDataBase[1]:
-            commandString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "#"
-        commandString += "##"
-        
+            guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]))
+        commandString = self.createGuestInfoCommandString(guestFromDataBase)
         print commandString
         self.myCommandServer.sendMessage(commandString)
             
-    def createCommandString(self, cardInfo):
-        if cardInfo == None:
+    def createGuestInfoCommandString(self, informationList):
+        if informationList == None:
             return
-        returnString  = "guestInfo:name:" + str(cardInfo[0]) + " " + str(cardInfo[1]) + "#"
-        returnString += " birthday:" + str(cardInfo[3]) + "#"
-        returnString += " sex:" + str(cardInfo[4]) + "#"
-        returnString += " zipcode:" + str(cardInfo[2]) + "#"
-        returnString += "#"
-        print returnString
+        returnString  = "guestInfo:name:" + str(informationList[1]) +"#"
+        returnString += " birthday:" + str(informationList[2]) + "#"
+        returnString += " sex:" + str(informationList[3]) + "#"
+        returnString += " guestId:" + str(informationList[0]) + "#"
+        returnString += " Image:" + str(informationList[4]) + "# DocumentationImage:" + str(informationList[5]) + "#"
+        returnString += " Events:"
+        for eventItem in informationList[6]:
+            returnString += "Event:dateTime:" + eventItem[0] + "#Description:" + eventItem[1] + "##"
+        returnString += "##"
         return returnString 
 if __name__ == '__main__':
     
     myMainServer = MainServer()  # starts the class 
+  #  print "test", myMainServer.handleTcpMessages("search:name:KIM#sex:##")
     while True:
         command = raw_input('Write stop to exit\n')
         print command
