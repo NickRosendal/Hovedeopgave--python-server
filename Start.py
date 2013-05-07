@@ -60,21 +60,28 @@ class MainServer():
             commandString = "searchResult:"
             if searchResult:
                 for guestEntry in searchResult:
-                    print guestEntry
                     commandString += self.createGuestInfoCommandString(guestEntry)
             commandString += "#"
-            print commandString
             self.myCommandServer.sendMessage(commandString)
     
         elif message[0:23] == "send picture from disk:":
             self.myFileServer.serveFile(message[23:len(message) - 1])
-        elif message[0:8] == "Entered ":
-            self.myDatabaseHandler.addEventToGuest(message[8:], "Entered")
+        elif message == "give me the night list":
+            guestsForNight = self.myDatabaseHandler.getGuestsForNight()
+            commandString = "guestsForNight:"
+            if guestsForNight:
+                for guestEntry in guestsForNight:
+                    commandString += self.createGuestInfoCommandString(guestEntry)
+            commandString += "#"
+            print commandString
+            self.myCommandServer.sendMessage(commandString)
     def handleSwipe(self, cardInfo):
         guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]))
         if not guestFromDataBase:
             self.myDatabaseHandler.addGuest(str(cardInfo[0]), str(cardInfo[1]), str(cardInfo[2]))
             guestFromDataBase = self.myDatabaseHandler.getSingleGuest(str(cardInfo[0]), str(cardInfo[1]))
+        else:
+            self.myDatabaseHandler.enterGuest(guestFromDataBase[0])
         commandString = self.createGuestInfoCommandString(guestFromDataBase)
         print commandString
         self.myCommandServer.sendMessage(commandString)
@@ -95,7 +102,7 @@ class MainServer():
 if __name__ == '__main__':
     
     myMainServer = MainServer()  # starts the class 
-  #  print "test", myMainServer.handleTcpMessages("search:name:KIM#sex:##")
+    #print "test", myMainServer.handleTcpMessages("giveMeNIght")
     while True:
         command = raw_input('Write stop to exit\n')
         print command

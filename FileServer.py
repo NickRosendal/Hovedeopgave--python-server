@@ -12,10 +12,10 @@ class FileServer(threading.Thread):
         self.stayOpen = False
         self.start()
          
-    def serveFile(self, file):
-        if file == "None":
+    def serveFile(self, inFile):
+        if inFile == "None":
             return
-        self.fileQue.append(file)
+        self.fileQue.append(inFile)
         self.stayOpen = True
     def closeConnection(self):
         self.stayOpen = False
