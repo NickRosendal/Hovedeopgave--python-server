@@ -41,8 +41,6 @@ class MagtekUsbCardReader(threading.Thread):
             
         self.endpoint = self.device[0][(0,0)][0]
     
-    
-    
         # wait for swipe
         self.notify("status","Ready to read card")
         while True:
@@ -52,7 +50,7 @@ class MagtekUsbCardReader(threading.Thread):
                 try:
                     data += self.device.read(self.endpoint.bEndpointAddress, self.endpoint.wMaxPacketSize,  timeout=250)
                     if not swiped: 
-                         self.notify("status","Card swiped")
+                        self.notify("status","Card swiped")
                     swiped = True
             
                 except usb.core.USBError as e:

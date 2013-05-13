@@ -1,2 +1,4 @@
 
 path/*
+*.jpeg
+*.pyc

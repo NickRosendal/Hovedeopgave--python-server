@@ -5,7 +5,7 @@ Created on Apr 19, 2013
 '''
 import sqlite3
 import os
-class DatabaseHandler:
+class GuestDatabaseHandler:
     
     def __init__(self, hoursBetweenlastVisit=12):
         self.hoursBetweenlastVisit = hoursBetweenlastVisit
@@ -15,7 +15,6 @@ class DatabaseHandler:
     def closeConnection(self):
         self.myCursor.close()
         self.myConnection.close()
-        pass
     def addGuest(self, name, birthday, sex):
         self.openConnection()
         self.myCursor.execute("INSERT INTO Guest VALUES (NULL,'" + name + "','" + birthday + "','" + sex + "',NULL, NULL);"),
@@ -47,6 +46,20 @@ class DatabaseHandler:
     def getSingleGuest(self, name, birthday):
         self.openConnection()
         self.myCursor.execute("SELECT * FROM Guest WHERE Name = '" + name + "' AND Birthday = '" + birthday + "'")
+        foundGuests = self.myCursor.fetchall()
+        if len(foundGuests) == 0:
+            self.closeConnection()
+            return None
+        elif len(foundGuests) == 1:
+            returnEntry = list(foundGuests[0])
+            self.myCursor.execute("SELECT DateTime, Description FROM Event WHERE Id ='" + str(returnEntry[0]) + "' ORDER BY DateTime DESC")  # New code
+            returnEntry.append(self.myCursor.fetchall())
+            self.closeConnection()
+            return returnEntry
+        self.closeConnection()
+    def getSingleGuestById(self,id):
+        self.openConnection()
+        self.myCursor.execute("SELECT * FROM Guest WHERE Id = '" + id + "'")
         foundGuests = self.myCursor.fetchall()
         if len(foundGuests) == 0:
             self.closeConnection()
@@ -108,7 +121,7 @@ class DatabaseHandler:
         self.closeConnection()
         
 if __name__ == '__main__':
-    myDatabaseHandler = DatabaseHandler()
+    myDatabaseHandler = GuestDatabaseHandler()
     # myDatabaseHandler.openConnection()
     # myDatabaseHandler.addGuest("firstAndMiddleName", "lastName", "birthday", "F", "imagePath", None)
     print "getSingleGuest", myDatabaseHandler.getSingleGuest("KIM GRAVE LINDHARD", "1982-07-21")

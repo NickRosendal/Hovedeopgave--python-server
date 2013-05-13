@@ -1,10 +1,3 @@
-'''
-Created on Apr 12, 2013
-M'%ROSENDAL^NICK LYNGGAARD           NAKSKOVVEJ 1 B 2 TH               1012500?;9208100403028831491001449084101010510?
-M'%LINDHARD^KIM GRAVE                GR]SPURVEVEJ 55 4 -3              1012400?;9208100421078212631005452084101021211?
-M'%JANSEN^JESPER WOLFRAM             HEDEPARKEN 7 7 E                  1512750?;9208100403089116671015725084151250712?
-M'%JOHANSEN^SIGNE                    GRG]RDS ALLE 109                  1903500?;9208100423128617741010146084190180310?
-'''
 import re
 import datetime
 def Interpitate(rawString):
@@ -12,25 +5,20 @@ def Interpitate(rawString):
     rawString = rawString.replace("\\", "OE")
     rawString = rawString.replace("]", "AA")
     
-    reobj = re.compile(r"'%(.*?)\^(.*?)   (\w.*?)   \d{3}(\d{4})\?;92081004(\d{6})\d{16}(\d{1})")
+    reobj = re.compile(r"'%(.*?)\^(.*?)   (\w.*?)   \d{3}(\d{4})\?;92081004(\d{6})(\d{4})\d{12}(\d{1})")
     match = reobj.search(rawString)
     if match:
         returnList = []
-        for matchItem in match.groups():
-            returnList.append(matchItem.strip())
-        returnList[0] = returnList[1] + " " + returnList[0]
-        del returnList[1]
-        del returnList[1]
-        del returnList[1]
-        print returnList
-        returnList[1] = datetime.datetime.strptime(str(returnList[1]), "%d%m%y").date().__str__()
-        returnList[2] = "M" if returnList[2] == "1" else "F"
+        returnList.append(match.group(2).strip() + " " + match.group(1))
+        returnList.append(datetime.datetime.strptime(str(match.group(5)), "%d%m%y").date().__str__())
+        returnList.append("M" if match.group(7) == "1" else "F")
         return returnList
     else:
         return None
 
     
 if __name__ == '__main__':
-    print Interpitate("M'%JANSEN^JESPER WOLFRAM             HEDEPARKEN 7 7 E                  1512750?;9208100403089116671015725084151250712?")
-    print Interpitate("M'%LINDHARD^KIM GRAVE                GR]SPURVEVEJ 55 4 -3              1012400?;9208100421078212631005452084101021211?")
-    print Interpitate("M'%JOHANSEN^SIGNE                    GR\DSVG]RDS ALLE 109                1903500?;9208100423128617741010146084190180310?")
+    print Interpitate("M'%JANSEN^JESPER WOLFRAM             HEDEPARKEN 7 7 E                  1512750?;9208100403089115671015725084151250712?")
+    print Interpitate("M'%LINDHARD^KIM GRAVE                GR]SPURVEVEJ 55 4 -3              1012400?;9208100421078214611005452084101021211?")
+    print Interpitate("M'%JOHANSEN^SIGNE                    GR\DSVG]RDS ALLE 109                1903500?;9208100423128617740010146084190180310?")
+    print Interpitate("M'%ROSENDAL^NICK LYNGGAARD           NAKSKOVVEJ 1 B 2 TH               1012500?;9208100403028832501001449084101010510?")
